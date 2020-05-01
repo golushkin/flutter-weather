@@ -28,9 +28,29 @@ class _WeatherState extends State<WeatherWidget> {
     });
   }
 
-  _getForecast(){
-    httpService = HttpService('1','1');
+  _getForecast() {
+    this._getCurrentLocation();
+    httpService = HttpService('1', '1');
     return httpService.getMockData();
+  }
+
+  List<Widget> _renderCards(List<Weather> data) {
+    return data
+        .map<Widget>((Weather weather) => Card(
+            child: ListTile(
+                title: Text("Tomorrow"),
+                subtitle: Text("May 4th"),
+                trailing: Icon(
+                  WeatherIcons.wiMeteor,
+                ),
+                onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          // builder: (context) => PostDetail(
+                          //   post: post,
+                          // ),
+                          ),
+                    ))))
+        .toList();
   }
 
   @override
@@ -40,48 +60,20 @@ class _WeatherState extends State<WeatherWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {    
-
-    return ListView(
-      children: <Widget>[
-        Card(
-          child:ListTile(
-          leading: Text("1.1"),
-          title: Text("23°C"),
-          trailing: Icon(Icons.wb_sunny),
-        )
-        )
-      ],
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: weather,
+      builder: (BuildContext context, AsyncSnapshot<List<Weather>> snapshot) {
+        if (snapshot.hasData) {
+          return ListView(
+            children: this._renderCards(snapshot.data),
+          );
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
-
-  // @override
-  // Widget build(BuildContext context) {    
-  //   return FutureBuilder(
-  //     future: weather,
-  //     builder: (BuildContext context, AsyncSnapshot<List<Weather>> snapshot) {
-  //         if (snapshot.hasData) {
-  //           return ListView(
-  //             children: snapshot.data
-  //                 .map<Widget>(
-  //                   (Weather weather) => ListTile(
-  //                     title: Text(weather.temperature.toString()),
-  //                     subtitle: Text("${1}"),
-  //                     onTap: () => Navigator.of(context).push(
-  //                       MaterialPageRoute(
-  //                         // builder: (context) => PostDetail(
-  //                         //   post: post,
-  //                         // ),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 )
-  //                 .toList(),
-  //           );
-  //         } else {
-  //           return Center(child: CircularProgressIndicator());
-  //         }
-  //       },
-  //   );
-  // }
 }
+
+/*MediaQuery.of(context).size.width * 0.75,*/
