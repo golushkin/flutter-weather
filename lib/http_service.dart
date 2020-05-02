@@ -12,17 +12,37 @@ class HttpService{
 
   HttpService(this.latitude, this.longitude);
 
-  Future<List<Weather>> getMockData() async {
+  DateTime _parseDate(Map<String, dynamic> obj){
+      return DateTime.parse(obj['dt_txt']);
+  }
+
+  int _findIndex(Map<String, dynamic> body){
+    for (var i = 0; i < body['list'].length; i++) {
+      if (_parseDate(body['list'][i]).hour == 0) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
+  Future<List<List<Weather>>> getMockData() async {
     http.Response res = await http.get(this._url_mock);
 
     if (res.statusCode == 200) {
       Map<String, dynamic> body = jsonDecode(res.body);
+      List<List<Weather>> weathers = List();
+      List<Weather> list = List();
+      int counter = 0;
 
-      List<Weather> weathers = body['list']
-          .map<Weather>(
-            (dynamic item) => Weather.fromJson(item),
-          )
-          .toList();
+      for (var i = _findIndex(body); i < body['list'].length; i++) {
+        if (counter > 7) {
+          counter = 0;
+          weathers.add(list);
+          list = List();
+        }
+        list.add(Weather.fromJson(body['list'][i]));
+        counter++;
+      }
 
       return weathers;
     } else {

@@ -1,8 +1,10 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_weather_icons/flutter_weather_icons.dart';
 import 'http_service.dart';
 import './weather.dart';
+import './strings.dart';
 
 class WeatherWidget extends StatefulWidget {
   @override
@@ -11,7 +13,7 @@ class WeatherWidget extends StatefulWidget {
 
 class _WeatherState extends State<WeatherWidget> {
   Position _currentPosition;
-  Future<List<Weather>> weather;
+  Future<List<List<Weather>>> weather;
   HttpService httpService;
 
   _getCurrentLocation() {
@@ -34,15 +36,13 @@ class _WeatherState extends State<WeatherWidget> {
     return httpService.getMockData();
   }
 
-  List<Widget> _renderCards(List<Weather> data) {
+  List<Widget> _renderCards(List<List<Weather>> data) {
     return data
-        .map<Widget>((Weather weather) => Card(
+        .map<Widget>((List<Weather> weather) => Card(
             child: ListTile(
-                title: Text("Tomorrow"),
-                subtitle: Text("May 4th"),
-                trailing: Icon(
-                  WeatherIcons.wiMeteor,
-                ),
+                title: Text(weather[0].getDayOfWeek()),
+                subtitle: Text(weather[0].getMonthPday()),
+                trailing: weather[5].getIcon(),
                 onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                           // builder: (context) => PostDetail(
@@ -63,7 +63,8 @@ class _WeatherState extends State<WeatherWidget> {
   Widget build(BuildContext context) {
     return FutureBuilder(
       future: weather,
-      builder: (BuildContext context, AsyncSnapshot<List<Weather>> snapshot) {
+      builder:
+          (BuildContext context, AsyncSnapshot<List<List<Weather>>> snapshot) {
         if (snapshot.hasData) {
           return ListView(
             children: this._renderCards(snapshot.data),
