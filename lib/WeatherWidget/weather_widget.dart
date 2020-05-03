@@ -1,10 +1,8 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_weather_icons/flutter_weather_icons.dart';
-import 'http_service.dart';
+import 'package:weather/WeatherWidget/weather_detail.dart';
+import '../http_service.dart';
 import './weather.dart';
-import './strings.dart';
 
 class WeatherWidget extends StatefulWidget {
   @override
@@ -12,9 +10,8 @@ class WeatherWidget extends StatefulWidget {
 }
 
 class _WeatherState extends State<WeatherWidget> {
-  Position _currentPosition;
   Future<List<List<Weather>>> weather;
-  HttpService httpService;
+  bool location = false;
 
   _getCurrentLocation() {
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
@@ -22,18 +19,22 @@ class _WeatherState extends State<WeatherWidget> {
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
-      setState(() {
-        _currentPosition = position;
-      });
+          this._getMockData(position);
     }).catchError((e) {
       print(e);
     });
   }
 
-  _getForecast() {
-    this._getCurrentLocation();
-    httpService = HttpService('1', '1');
-    return httpService.getMockData();
+  Future<List<List<Weather>>> _getMockData(Position position){
+    HttpService httpService;
+
+    httpService = HttpService(position.latitude.toString(),
+          position.longitude.toString());
+
+    setState(() {
+      location = true;
+      weather = httpService.getMockData();
+    });
   }
 
   List<Widget> _renderCards(List<List<Weather>> data) {
@@ -45,22 +46,17 @@ class _WeatherState extends State<WeatherWidget> {
                 trailing: weather[5].getIcon(),
                 onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                          // builder: (context) => PostDetail(
-                          //   post: post,
-                          // ),
-                          ),
+                        builder: (context) => WeatherDetail(weather),
+                      ),
                     ))))
         .toList();
   }
 
   @override
-  void initState() {
-    super.initState();
-    weather = this._getForecast();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    if (!this.location) {
+      this._getCurrentLocation();
+    }
     return FutureBuilder(
       future: weather,
       builder:

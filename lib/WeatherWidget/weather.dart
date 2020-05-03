@@ -1,12 +1,12 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import './strings.dart';
+import '../strings.dart';
 
 final String language = ui.window.locale.languageCode;
 
 class Weather {
   double temperature;
-  double pressure;
+  int pressure;
   int weather_id;
   double wind_speed;
   int humidity;
@@ -24,7 +24,7 @@ class Weather {
   factory Weather.fromJson(Map<String, dynamic> json) {
     return Weather(
         temperature: json['main']['temp'],
-        pressure: json['main']['pressure'],
+        pressure: json['main']['pressure'].floor(),
         weather_id: json['weather'][0]['id'],
         wind_speed: json['wind']['speed'],
         humidity: json['main']['humidity'],
@@ -48,10 +48,33 @@ class Weather {
   }
 
   Icon getIcon(){
-    String time;
+    String part_of_day;
     if (this.date.hour <= 18) {
-      time = "day";
+      part_of_day = "day";
     }
-    return Icon(icons[time][this.weather_id]);
+    else{
+      part_of_day = 'night';
+    }
+    return Icon(icons[part_of_day][this.weather_id]);
+  }
+
+  String getTime(){
+    return "${this.date.hour}:00";
+  }
+
+  String getTemperature(){
+    return "+${this.temperature}°";
+  }
+
+  String getWind(){
+    return "${this.wind_speed}\nm/s";
+  }
+
+   String getHumidity(){
+    return "${this.humidity}%";
+  }
+
+   String getPressure(){
+    return "${this.pressure}hPa";
   }
 }

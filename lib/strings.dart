@@ -25,7 +25,7 @@ var strings = {
       "October",
       "November",
       "December",
-    ]
+    ],
   },
   "ru":{
     "dof":[
@@ -171,4 +171,18 @@ var icons = {
     803: WeatherIcons.wiNightCloudy,
     804: WeatherIcons.wiNightCloudy,
   },
+};
+
+
+var weather_cond = {
+  "en":{
+    "wind":"Wind",
+    "hum":"Humidity",
+    "pres":"Pressure"
+  },
+  "ru":{
+    "wind":"Ветер",
+    "hum":"Влажность",
+    "pres":"Давление"
+  }
 };
