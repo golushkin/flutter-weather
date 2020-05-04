@@ -31,6 +31,16 @@ class Weather {
         date: DateTime.parse(json['dt_txt']));
   }
 
+  factory Weather.fromWeather(Weather weather) {
+    return Weather(
+        temperature: weather.temperature * 1.8 + 32,
+        pressure: weather.pressure,
+        weather_id: weather.weather_id,
+        wind_speed: weather.wind_speed,
+        humidity: weather.humidity,
+        date: weather.date,);
+  }
+
   String getDayOfWeek() {
     return strings[language]['dof'][this.date.weekday - 1];
   }
@@ -63,7 +73,7 @@ class Weather {
   }
 
   String getTemperature(){
-    return "+${this.temperature}°";
+    return "+${this.temperature.toStringAsFixed(2)}°";
   }
 
   String getWind(){

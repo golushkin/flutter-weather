@@ -70,7 +70,7 @@ class WeatherDetail extends StatelessWidget {
               child: Icon(WeatherIcons.wiStrongWind),
             ),
             Text(
-              weather_cond[ui.Locale.cachedLocale.languageCode]['wind'],
+              weather_cond[ui.window.locale.languageCode]['wind'],
             )
           ],
         ));
@@ -96,7 +96,7 @@ class WeatherDetail extends StatelessWidget {
               child: Icon(WeatherIcons.wiHumidity),
             ),
             Text(
-              weather_cond[ui.Locale.cachedLocale.languageCode]['hum'],
+              weather_cond[ui.window.locale.languageCode]['hum'],
             )
           ],
         ));
@@ -122,7 +122,7 @@ class WeatherDetail extends StatelessWidget {
               child: Icon(WeatherIcons.wiBarometer),
             ),
             Text(
-              weather_cond[ui.Locale.cachedLocale.languageCode]['pres'],
+              weather_cond[ui.window.locale.languageCode]['pres'],
             )
           ],
         ));

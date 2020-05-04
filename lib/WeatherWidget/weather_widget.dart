@@ -11,7 +11,9 @@ class WeatherWidget extends StatefulWidget {
 
 class _WeatherState extends State<WeatherWidget> {
   Future<List<List<Weather>>> weather;
-  bool location = false;
+  List<List<Weather>> weather_f;
+  bool data = false;
+  bool to_forenheit = false;
 
   _getCurrentLocation() {
     final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
@@ -19,20 +21,20 @@ class _WeatherState extends State<WeatherWidget> {
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
-          this._getMockData(position);
+      this._getMockData(position);
     }).catchError((e) {
       print(e);
     });
   }
 
-  Future<List<List<Weather>>> _getMockData(Position position){
+  Future<List<List<Weather>>> _getMockData(Position position) {
     HttpService httpService;
 
-    httpService = HttpService(position.latitude.toString(),
-          position.longitude.toString());
+    httpService = HttpService(
+        position.latitude.toString(), position.longitude.toString());
 
     setState(() {
-      location = true;
+      data = true;
       weather = httpService.getMockData();
     });
   }
@@ -52,9 +54,38 @@ class _WeatherState extends State<WeatherWidget> {
         .toList();
   }
 
+  Widget _renderSwitch() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: <Widget>[
+        Text(this.to_forenheit ? "°F" : "°C"),
+        Switch(
+            value: this.to_forenheit,
+            onChanged: (bool newValue) {
+              setState(() {
+                to_forenheit = newValue;
+              });
+            })
+      ],
+    );
+  }
+
+  _forenheitWeather(List<List<Weather>> list) {
+    List<List<Weather>> foo = List();
+
+    for (var i = 0; i < list.length; i++) {
+      List<Weather> foo1 = list[i]
+          .map((Weather weather) => Weather.fromWeather(weather))
+          .toList();
+        foo.add(foo1);
+    }
+
+    this.weather_f = foo;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!this.location) {
+    if (!this.data) {
       this._getCurrentLocation();
     }
     return FutureBuilder(
@@ -62,8 +93,15 @@ class _WeatherState extends State<WeatherWidget> {
       builder:
           (BuildContext context, AsyncSnapshot<List<List<Weather>>> snapshot) {
         if (snapshot.hasData) {
+          List<List<Weather>> list = snapshot.data;
+          if (this.to_forenheit) {
+            if (this.weather_f == null) {
+              this._forenheitWeather(snapshot.data);
+            }
+            list = this.weather_f;
+          }
           return ListView(
-            children: this._renderCards(snapshot.data),
+            children: [this._renderSwitch(), ...this._renderCards(list)],
           );
         } else {
           return Center(child: CircularProgressIndicator());
