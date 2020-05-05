@@ -6,8 +6,9 @@ import '../strings.dart';
 
 class WeatherDetail extends StatelessWidget {
   final List<Weather> weathers;
+  final bool to_forenheit;
 
-  WeatherDetail(this.weathers);
+  WeatherDetail(this.weathers, this.to_forenheit);
 
   Widget _renderCard(
       BuildContext context, List<Widget> children, Widget header) {
@@ -43,7 +44,9 @@ class WeatherDetail extends StatelessWidget {
                     Container(
                         padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
                         child: weather.getIcon()),
-                    Text(weather.getTemperature()),
+                    Text(this.to_forenheit
+                        ? weather.getTemperatureForen()
+                        : weather.getTemperature()),
                   ],
                 ))
             .toList(),

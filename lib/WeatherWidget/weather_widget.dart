@@ -13,7 +13,6 @@ class WeatherWidget extends StatefulWidget {
 class _WeatherState extends State<WeatherWidget> {
   Future<List<List<Weather>>> weather;
   Future<Weather> current_weather;
-  List<List<Weather>> weather_f;
   bool data = false;
   bool to_forenheit = false;
 
@@ -23,7 +22,7 @@ class _WeatherState extends State<WeatherWidget> {
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
-      this._getMockData(position);
+      this._getWeather(position);
       setState(() {
         data = true;
       });
@@ -32,83 +31,98 @@ class _WeatherState extends State<WeatherWidget> {
     });
   }
 
-  Future<List<List<Weather>>> _getMockData(Position position) {
+  Future<List<List<Weather>>> _getWeather(Position position) {
     HttpService httpService;
 
     httpService = HttpService(
         position.latitude.toString(), position.longitude.toString());
 
     setState(() {
-      weather = httpService.getMockData();
+      current_weather = httpService.getCurrentWeather(test: false);
+      weather = httpService.getForecast(test: false);
     });
   }
 
-  Widget _renderCurrentWeatherColumn(IconData icon, String text){
+  Widget _renderCurrentWeatherColumn(IconData icon, String text) {
     return Column(
-              children: <Widget>[
-                Icon(icon),
-                Container(
-                  padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                  child: Text(text),
-                )
-              ],
-            );
-  }
-
-  Widget _renderCurrentWeatherDate(){
-    return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Container(
-              padding: EdgeInsets.fromLTRB(0, 5, 10, 0),
-              child: Text("Monday", style: TextStyle(fontSize: 16),),
-            ),
-            Container(
-              padding: EdgeInsets.fromLTRB(0, 5, 10, 0),
-              child: Text("Now", style: TextStyle(color: Colors.grey[600]),),
-            ),
-          ],
-        );
-  }
-
-  Widget _renderCurrentWeather(AsyncSnapshot<List<List<Weather>>> snapshot) {
-    return Card(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _renderCurrentWeatherDate(),
-        Center(
-            child: Container(
-          padding: EdgeInsets.fromLTRB(0, 5, 0, 30),
-          child: snapshot.data[0][0].getIcon(size: 40),
-        )),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            _renderCurrentWeatherColumn(WeatherIcons.wiThermometer, "+25°"),
-            _renderCurrentWeatherColumn(WeatherIcons.wiStrongWind, "6.23 m/s"),
-            _renderCurrentWeatherColumn(WeatherIcons.wiHumidity, "100%"),
-            _renderCurrentWeatherColumn(WeatherIcons.wiBarometer, "1022hPa"),
-          ],
+        Icon(icon),
+        Container(
+          padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
+          child: Text(text),
         )
       ],
-    ));
+    );
+  }
+
+  Widget _renderCurrentWeatherDate(AsyncSnapshot<Weather> snapshot) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.fromLTRB(15, 5, 0, 0),
+          child: Text(
+            snapshot.data.getDayOfWeek(),
+            style: TextStyle(fontSize: 16),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.fromLTRB(15, 5, 0, 0),
+          child: Text(
+            snapshot.data.getMonthPday(),
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _renderCurrentWeather(AsyncSnapshot<Weather> snapshot,
+      AsyncSnapshot<List<List<Weather>>> snapshotForecast) {
+    if (snapshot.hasData) {
+      return Column(
+        children: <Widget>[
+          this._renderSwitch(),
+          Card(
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              _renderCurrentWeatherDate(snapshot),
+              Center(
+                  child: Container(
+                padding: EdgeInsets.fromLTRB(0, 5, 0, 30),
+                child: snapshot.data.getIcon(size: 40),
+              )),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  _renderCurrentWeatherColumn(
+                      WeatherIcons.wiThermometer,
+                      this.to_forenheit
+                          ? snapshot.data.getTemperatureForen()
+                          : snapshot.data.getTemperature()),
+                  _renderCurrentWeatherColumn(
+                      WeatherIcons.wiStrongWind, snapshot.data.getWind()),
+                  _renderCurrentWeatherColumn(
+                      WeatherIcons.wiHumidity, snapshot.data.getHumidity()),
+                  _renderCurrentWeatherColumn(
+                      WeatherIcons.wiBarometer, snapshot.data.getPressure()),
+                ],
+              )
+            ],
+          )),
+          this._renderWeatherForecast(snapshotForecast)
+        ],
+      );
+    } else {
+      return Center(child: CircularProgressIndicator());
+    }
   }
 
   Widget _renderWeatherForecast(AsyncSnapshot<List<List<Weather>>> snapshot) {
     if (snapshot.hasData) {
-      List<List<Weather>> list = snapshot.data;
-      if (this.to_forenheit) {
-        if (this.weather_f == null) {
-          this._forenheitWeather(snapshot.data);
-        }
-        list = this.weather_f;
-      }
-      return ListView(
-        children: [
-          this._renderSwitch(),
-          ...this._renderCards(list)
-        ],
+      return Column(
+        children: <Widget>[...this._renderCards(snapshot.data)],
       );
     } else {
       return Center(child: CircularProgressIndicator());
@@ -124,7 +138,8 @@ class _WeatherState extends State<WeatherWidget> {
                 trailing: weather[5].getIcon(),
                 onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => WeatherDetail(weather),
+                        builder: (context) =>
+                            WeatherDetail(weather, this.to_forenheit),
                       ),
                     ))))
         .toList();
@@ -146,30 +161,22 @@ class _WeatherState extends State<WeatherWidget> {
     );
   }
 
-  _forenheitWeather(List<List<Weather>> list) {
-    List<List<Weather>> foo = List();
-
-    for (var i = 0; i < list.length; i++) {
-      List<Weather> foo1 = list[i]
-          .map((Weather weather) => Weather.fromWeather(weather))
-          .toList();
-      foo.add(foo1);
-    }
-
-    this.weather_f = foo;
-  }
-
   @override
   Widget build(BuildContext context) {
     if (!this.data) {
       this._getCurrentLocation();
     }
+
     return FutureBuilder(
-      future: weather,
-      builder:
-          (BuildContext context, AsyncSnapshot<List<List<Weather>>> snapshot) =>
-              this._renderWeatherForecast(snapshot),
-    );
+        future: current_weather,
+        builder: (BuildContext context, AsyncSnapshot<Weather> snapshot) {
+          return FutureBuilder(
+              future: weather,
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<List<Weather>>> snapshotForecast) {
+                return this._renderCurrentWeather(snapshot, snapshotForecast);
+              });
+        });
   }
 
   // @override

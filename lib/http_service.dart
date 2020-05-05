@@ -7,8 +7,8 @@ class HttpService{
   final String latitude;
   final String appId = "9036e4786a1201c63b03128892c31c1b";
   final String _base_url = "https://api.openweathermap.org/data/2.5/";
-  final String _url_for_current_weather = "";
   final String _url_mock = "https://samples.openweathermap.org/data/2.5/forecast?lat=35&lon=139&appid=439d4b804bc8187953eb36d2a8c26a02";
+  final String _url_current_mock = 'https://samples.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid=439d4b804bc8187953eb36d2a8c26a02';
 
   HttpService(this.latitude, this.longitude);
 
@@ -25,8 +25,17 @@ class HttpService{
     return 0;
   }
 
-  Future<List<List<Weather>>> getMockData() async {
-    http.Response res = await http.get(this._url_mock);
+  
+  Future<List<List<Weather>>> getForecast({test: true}) async {
+    String url;
+    if (test) {
+      url = this._url_mock;
+    }
+    else{
+      url = this._base_url + "forecast?units=metric&lat=${this.latitude}&lon=${this.longitude}&appid=${this.appId}";
+    }
+  
+    http.Response res = await http.get(url);
 
     if (res.statusCode == 200) {
       Map<String, dynamic> body = jsonDecode(res.body);
@@ -50,27 +59,22 @@ class HttpService{
     }
   }
 
-  Future<List<List<Weather>>> getForecast() async {
-    String url = this._base_url + "forecast?units=metric&lat=${this.latitude}&lon=${this.longitude}&appid=${this.appId}";
+  Future<Weather> getCurrentWeather({test: true}) async {
+    String url;
+    if (test) {
+      url = this._url_current_mock;
+    }
+    else{
+      url = this._base_url + "weather?units=metric&lat=${this.latitude}&lon=${this.longitude}&appid=${this.appId}";
+    }
+
     http.Response res = await http.get(url);
 
     if (res.statusCode == 200) {
       Map<String, dynamic> body = jsonDecode(res.body);
-      List<List<Weather>> weathers = List();
-      List<Weather> list = List();
-      int counter = 0;
+      Weather weather = Weather.fromJson(body);
 
-      for (var i = _findIndex(body); i < body['list'].length; i++) {
-        if (counter > 7) {
-          counter = 0;
-          weathers.add(list);
-          list = List();
-        }
-        list.add(Weather.fromJson(body['list'][i]));
-        counter++;
-      }
-
-      return weathers;
+      return weather;
     } else {
       throw "Can't get posts.";
     }

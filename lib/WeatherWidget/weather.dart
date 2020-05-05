@@ -6,6 +6,7 @@ final String language = ui.window.locale.languageCode;
 
 class Weather {
   double temperature;
+  double temp_foren;
   int pressure;
   int weather_id;
   double wind_speed;
@@ -14,6 +15,7 @@ class Weather {
 
   Weather({
     this.temperature,
+    this.temp_foren,
     this.pressure,
     this.weather_id,
     this.humidity,
@@ -22,14 +24,24 @@ class Weather {
   });
 
   factory Weather.fromJson(Map<String, dynamic> json) {
+    DateTime dateTime;
+    if (!json.containsKey("dt_txt")) {
+       dateTime = DateTime.fromMillisecondsSinceEpoch(json['dt']*1000, isUtc: true);
+    }
+    else{
+      dateTime = DateTime.parse(json['dt_txt']);
+    }
+    
     return Weather(
-        temperature: json['main']['temp'],
+        temperature: json['main']['temp'].toDouble(),
+        temp_foren: json['main']['temp'] * 1.8 + 32,
         pressure: json['main']['pressure'].floor(),
         weather_id: json['weather'][0]['id'],
         wind_speed: json['wind']['speed'],
         humidity: json['main']['humidity'],
-        date: DateTime.parse(json['dt_txt']));
+        date: dateTime);
   }
+
 
   factory Weather.fromWeather(Weather weather) {
     return Weather(
@@ -76,8 +88,12 @@ class Weather {
     return "+${this.temperature.toStringAsFixed(2)}°";
   }
 
+  String getTemperatureForen(){
+    return "+${this.temp_foren.toStringAsFixed(2)}°";
+  }
+
   String getWind(){
-    return "${this.wind_speed}\nm/s";
+    return "${this.wind_speed} m/s";
   }
 
    String getHumidity(){
@@ -85,6 +101,6 @@ class Weather {
   }
 
    String getPressure(){
-    return "${this.pressure}hPa";
+    return "${this.pressure} hPa";
   }
 }
