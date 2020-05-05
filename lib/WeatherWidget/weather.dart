@@ -57,7 +57,7 @@ class Weather {
     return data;
   }
 
-  Icon getIcon(){
+  Icon getIcon({double size: 24}){
     String part_of_day;
     if (this.date.hour <= 18) {
       part_of_day = "day";
@@ -65,7 +65,7 @@ class Weather {
     else{
       part_of_day = 'night';
     }
-    return Icon(icons[part_of_day][this.weather_id]);
+    return Icon(icons[part_of_day][this.weather_id], size: size,);
   }
 
   String getTime(){
